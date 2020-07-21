@@ -1,0 +1,29 @@
+<html>
+
+
+<title>Virtual Grand Exchange</title>
+
+<br>
+<form action="/" method="post">
+
+	Search:<input type="text" name="name" value="">
+	<input type="submit" value="Submit">
+	
+</form>
+
+
+
+{% for item in items %}
+
+{% for entry in item %}
+
+<a href="" style="color:blue">{{ entry }}</a>
+
+{% endfor %}
+<br>
+{% endfor %}
+
+
+
+
+</html>
