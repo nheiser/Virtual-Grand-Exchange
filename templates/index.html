@@ -1,29 +1,224 @@
 <html>
 
+<head>
+
+<script src="https://unpkg.com/vue"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+
+</head>
 
 <title>Virtual Grand Exchange</title>
 
-<br>
-<form action="/" method="post">
 
-	Search:<input type="text" name="name" value="">
-	<input type="submit" value="Submit">
-	
+{% for slot in slots %}
+
+Name: {{ slot[1] }}
+<br>
+Quantity: {{ slot[2] }}
+<br>
+Bought at: {{ slot[3] }}
+<br>
+Amount Spent: {{ slot[4] }}
+
+<br>
+<br>
+{% endfor %}
+
+
+<div ng-app="myApp">
+
+<form ng-init="type='buy'">
+  <input type="radio" ng-model="type" value="buy" checked="checked">Buy
+  <input type="radio" ng-model="type" value="sell">Sell
 </form>
 
+<div ng-switch="type">
+  <div ng-switch-when="buy">
 
+		<form action="/" method="post">
+			Search:<input type="text" name="name" value="">
+			<input type="submit" value="Submit">
+		</form>
+
+		<div>
+		
+		{% for item in items %}
+		
+			<div ng-controller="buyCtrl" ng-init="quantity=0">
+		
+				<form id={{ item[0] }} action="/buy" method="post">
+			
+					<input type="hidden" name="id" ng-model="id" value="{{ item[0] }}">
+					<input type="hidden" name="name" ng-model="name" value="{{ item[1] }}">
+					<input type="hidden" name="unitPrice" ng-model="unitPrice" value="{{ item[2] }}">
+					{{ item[1] }}
+					{{ item[2] }}
+					Buy: <input type="number" name="quantity" value="0" min="0" ng-change="updateBuyTotal('{{ item[2] }}')" ng-model="quantity">
+					<span ng-bind="total"></span>
+					<input type="submit" value="Buy">
+					
+				</form>
+		
+			</div>
+		
+		<br>
+		
+		{% endfor %}
+		</div>
+		
+		
+	</div>
+	<div ng-switch-when="sell">
+		
+		{% for slot in slots %}
+		
+		Name: {{ slot[1] }}
+		<br>
+		Quantity: {{ slot[2] }}
+		<br>
+		Bought at: {{ slot[3] }}
+		<br>
+		Amount Spent: {{ slot[4] }}
+		
+		<br>
+		<br>
+		{% endfor %}
+     
+	</div>
+</div>
+
+</div>
+
+
+<script>
+var app = angular.module('myApp', []);
+app.controller('buyCtrl', function($scope) {
+				
+$scope.total = "Price: " + 0;
+
+$scope.updateBuyTotal = function(price) {
+	
+	price = standardizePrice(price);
+	
+	product = parseInt(price) * $scope.quantity;
+	
+	product = getReadableText(product);
+	
+	$scope.total = "Price: " + product;
+					
+	};
+});
+				
+</script>
+
+<script>
+
+function standardizePrice(price) {
+
+	//Possible Prices:
+	
+	//Price: 1 - 999 => do nothing
+	//Price: 1,000 - 9,999 => 1000 - 9999 //price.replace(",", "")
+	//Price: 10.0k - 999.9k => 10000 - 999900 //price.replace(".", ""), price.replace("k", "00")
+	//Price: 1.0m - 999.9m => 1000000 - 999900000 //price.replace(".", ""), price.replace("m", "00000")
+	//Price: 1.0b - 2.1b => 1000000000 - 2100000000 //price.replace(".", ""), price.replace("b", "00000000")
+	
+	price = price.replace(",", "");
+	price = price.replace(".", "");
+	price = price.replace("k", "00");
+	price = price.replace("m", "00000");
+	price = price.replace("b", "00000000");
+
+	return price;
+}
+
+function getReadableText(price){
+
+	if (price >= 1000000000) {
+		price = price / 1000000000;
+		price = price.toFixed(1);
+		price = price + "b";
+		
+	}else if (price >= 1000000) {
+		price = price / 1000000;
+		price = price.toFixed(1);
+		price = price + "m";
+		
+	}else if (price >= 10000) {
+		price = price / 1000;
+		price = price.toFixed(1);
+		price = price + "k";
+	}else{
+		price = price.toLocaleString();
+	}
+	
+	return price;
+
+}
+
+
+
+
+</script>
+
+
+
+
+
+<!--
 
 {% for item in items %}
 
-{% for entry in item %}
+	<form id={{ item[0] }} action="/buy" method="post">
 
-<a href="" style="color:blue">{{ entry }}</a>
+	<input type="hidden" name="id" value={{ item[0] }}>
+	<a style="color:blue" onclick="document.getElementById({{ item[0] }}).submit();">{{ item[1] }}</a>
+		
+	</form>
 
 {% endfor %}
-<br>
-{% endfor %}
+-->
+
+<script>
+
+var buyItems = new Vue({
+	el: '#buy',
+	data: {
+		item: []
+	},
+
+	created() {
+		//alert("Start");
+		//this.selectItem("23733");
+	},
+		
+	methods: {
+	
+		selectItem: function(id) {
+			alert("1");
+			alert(id);
+			var query = { 'id': "23733" };
+			
+			fetch('/buy', {
+				
+				headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json'
+				},
+				method: "POST",
+				body: JSON.stringify(query)
+				
+			})
+			.then(response => response.json())
+			.then(json => { this.item = json; alert(this.item["current"]["price"]);})
+			
+		}
+	}
+})
 
 
+</script>
 
 
 </html>
