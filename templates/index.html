@@ -45,7 +45,7 @@ Amount Spent: {{ slot[4] }}
 		
 		{% for item in items %}
 		
-			<div ng-controller="buyCtrl" ng-init="quantity=0">
+			<div ng-controller="Ctrl" ng-init="quantity=0">
 		
 				<form id={{ item[0] }} action="/buy" method="post">
 			
@@ -54,7 +54,7 @@ Amount Spent: {{ slot[4] }}
 					<input type="hidden" name="unitPrice" ng-model="unitPrice" value="{{ item[2] }}">
 					{{ item[1] }}
 					{{ item[2] }}
-					Buy: <input type="number" name="quantity" value="0" min="0" ng-change="updateBuyTotal('{{ item[2] }}')" ng-model="quantity">
+					Buy: <input type="number" name="quantity" value="0" min="0" ng-change="updateTotal('{{ item[2] }}')" ng-model="quantity">
 					<span ng-bind="total"></span>
 					<input type="submit" value="Buy">
 					
@@ -63,7 +63,6 @@ Amount Spent: {{ slot[4] }}
 			</div>
 		
 		<br>
-		
 		{% endfor %}
 		</div>
 		
@@ -73,15 +72,23 @@ Amount Spent: {{ slot[4] }}
 		
 		{% for slot in slots %}
 		
-		Name: {{ slot[1] }}
-		<br>
-		Quantity: {{ slot[2] }}
-		<br>
-		Bought at: {{ slot[3] }}
-		<br>
-		Amount Spent: {{ slot[4] }}
+		<div ng-controller="Ctrl" ng-init="quantity=0">
 		
-		<br>
+			<form id={{ slot[0] }} action="/sell" method="post">
+			
+				<input type="hidden" name="id" ng-model="id" value="{{ slot[0] }}">
+				<input type="hidden" name="name" ng-model="name" value="{{ slot[1] }}">
+				<input type="hidden" name="unitPrice" ng-model="unitPrice" value="{{ slot[5] }}">
+				{{ slot[1] }}
+				Supply: {{ slot[2] }}
+				Current Value: {{ slot[5] }}
+				Sell: <input type="number" name="quantity" value="0" min="0" max="{{ slot[2] }}" ng-change="updateTotal('{{ slot[5] }}')" ng-model="quantity">
+				<span ng-bind="total"></span>
+				<input type="submit" value="Sell">
+					
+			</form>
+		</div>
+		
 		<br>
 		{% endfor %}
      
@@ -93,11 +100,11 @@ Amount Spent: {{ slot[4] }}
 
 <script>
 var app = angular.module('myApp', []);
-app.controller('buyCtrl', function($scope) {
+app.controller('Ctrl', function($scope) {
 				
 $scope.total = "Price: " + 0;
 
-$scope.updateBuyTotal = function(price) {
+$scope.updateTotal = function(price) {
 	
 	price = standardizePrice(price);
 	

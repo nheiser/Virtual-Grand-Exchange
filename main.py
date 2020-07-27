@@ -10,11 +10,16 @@ import threading
 from http import cookies
 from flask import jsonify
 import ast
+import secrets
+from flask import session
+
+
+secret_key = secrets.token_urlsafe(16)
 
 app = Flask(__name__)
+app.secret_key = "7BOXEyui_8wRiMOU0Pq6LQ"
 
-results = []
-
+slots = []
 
 @app.route("/buy", methods = ["GET", "POST"])
 def buy():
@@ -26,9 +31,10 @@ def buy():
 		quantity = int(request.form.get("quantity"))
 		unitPrice = request.form.get("unitPrice")
 		
-		unitPrice = int(standardizePrice(unitPrice))
+		cleanPrice = int(standardizePrice(unitPrice))
 		
-		totalPrice = unitPrice * quantity
+		totalPrice = cleanPrice * quantity
+		totalPrice = '{:,}'.format(totalPrice)
 		
 		print(itemId, name, quantity, unitPrice, totalPrice)
 		
@@ -39,6 +45,7 @@ def buy():
 		slot.append(quantity)
 		slot.append(unitPrice)
 		slot.append(totalPrice)
+		#slot.append(unitPrice)
 		
 		#Slot 1:
 		#[Item ID, Name, Quantity, unitPrice, totalPrice]
@@ -67,9 +74,40 @@ def buy():
 @app.route("/", methods = ["GET", "POST"])
 def home():
 	
+	if ("gold" in session):
+		gold = session["gold"]
+	else:
+		session.clear()
+		session["gold"] = 100000000
+		gold = session["gold"]
+	
+	#print(gold)
+	
+	
+	#s = requests.session()
+	#s.cookies["foo"] = "bar"
+	#print(s.cookies["foo"])
+	#s.post('http://localhost/', params={'foo': 'bar'})
+	#print(s.cookies)
+	
 	if ("slots" in request.cookies):
 		slots = request.cookies.get("slots")
 		slots = ast.literal_eval(slots)
+		
+		threads = []
+		
+		for i in range (0, len(slots)):
+			
+			t = threading.Thread(target = updatePrices, args = (slots[i],))
+			t.start()
+			threads.append(t)
+		
+		for thread in threads:
+			thread.join()
+			
+		print(slots)
+		
+		
 	else:
 		slots = []
 	
@@ -80,7 +118,6 @@ def home():
 			
 	else:
 		
-		results.clear()
 		text = request.form.get("name").lower()
 		
 		print(text)
@@ -105,9 +142,10 @@ def home():
 				break
 				
 		threads = []
+		results = []
 		
 		for i in range (0, count):
-			t = threading.Thread(target = getPrices, args = (entry[i],))
+			t = threading.Thread(target = getPrices, args = (results, entry[i],))
 			t.start()
 			threads.append(t)
 		
@@ -118,6 +156,20 @@ def home():
 		
 		return render_template("index.html", items = results, slots = slots)
 		
+	
+	
+	
+def updatePrices(slot):
+	
+	url = "https://secure.runescape.com/m=itemdb_oldschool/api/catalogue/detail.json?item=" + slot[0]
+	
+	response = requests.get(url).json()
+	
+	item = {}
+	item = response["item"]
+	
+	slot.append(item["current"]["price"])
+	
 	
 def standardizePrice(price):
 
@@ -137,7 +189,7 @@ def standardizePrice(price):
 
 	return price
 	
-def getPrices(id):
+def getPrices(results, id):
 
 	url = "https://secure.runescape.com/m=itemdb_oldschool/api/catalogue/detail.json?item=" + id
 	
