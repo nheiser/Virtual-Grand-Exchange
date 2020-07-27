@@ -10,6 +10,10 @@
 
 <title>Virtual Grand Exchange</title>
 
+Gold: {{ gold }}
+<br>
+<br>
+
 
 {% for slot in slots %}
 
@@ -77,7 +81,7 @@ Amount Spent: {{ slot[4] }}
 			<form id={{ slot[0] }} action="/sell" method="post">
 			
 				<input type="hidden" name="id" ng-model="id" value="{{ slot[0] }}">
-				<input type="hidden" name="name" ng-model="name" value="{{ slot[1] }}">
+				<input type="hidden" name="stock" ng-model="stock" value="{{ slot[2] }}">
 				<input type="hidden" name="unitPrice" ng-model="unitPrice" value="{{ slot[5] }}">
 				{{ slot[1] }}
 				Supply: {{ slot[2] }}

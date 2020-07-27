@@ -21,6 +21,37 @@ app.secret_key = "7BOXEyui_8wRiMOU0Pq6LQ"
 
 slots = []
 
+
+@app.route("/sell", methods = ["GET", "POST"])
+def sell():
+
+	if (request.method == "POST"):
+	
+		itemId = request.form.get("id")
+		stock = int(request.form.get("stock"))
+		quantity = int(request.form.get("quantity"))
+		unitPrice = request.form.get("unitPrice")
+	
+		
+		cleanPrice = int(standardizePrice(unitPrice))
+		totalPrice = cleanPrice * quantity
+
+		session["gold"] += totalPrice
+
+		slots = session["slots"]
+
+		for slot in slots:
+			if (slot[0] == itemId):
+				slot[2] -= quantity
+				if (slot[2] == 0):
+					slots.pop(0)
+				break
+				
+		session["slots"] = slots
+		
+		return make_response(redirect("/"))
+
+
 @app.route("/buy", methods = ["GET", "POST"])
 def buy():
 
@@ -31,9 +62,20 @@ def buy():
 		quantity = int(request.form.get("quantity"))
 		unitPrice = request.form.get("unitPrice")
 		
-		cleanPrice = int(standardizePrice(unitPrice))
+		if (quantity <= 0):
+			#you cannot buy that amount
+			return make_response(redirect("/"))
 		
+		cleanPrice = int(standardizePrice(unitPrice))
 		totalPrice = cleanPrice * quantity
+		
+		if (session["gold"] < totalPrice):
+			#you do not have enough gold
+			return make_response(redirect("/"))
+		
+		
+		session["gold"] -= totalPrice
+		
 		totalPrice = '{:,}'.format(totalPrice)
 		
 		print(itemId, name, quantity, unitPrice, totalPrice)
@@ -45,17 +87,17 @@ def buy():
 		slot.append(quantity)
 		slot.append(unitPrice)
 		slot.append(totalPrice)
-		#slot.append(unitPrice)
+		#slot.append(actualPrice)
 		
 		#Slot 1:
 		#[Item ID, Name, Quantity, unitPrice, totalPrice]
 		#[50, Shortbow (u), 100, 11, 1100]
 		
 		slots = []
-		if ("slots" in request.cookies):
+		if ("slots" in session):
 		
-			slots = request.cookies.get("slots")
-			slots = ast.literal_eval(slots)
+			slots = session["slots"]
+			#slots = ast.literal_eval(slots)
 			
 		slots.append(slot)
 		
@@ -64,11 +106,10 @@ def buy():
 		#[[50, Shortbow (u), 100, 11, 1100], [20997, Twisted bow, 2, 1.2b, 2.4b]]
 		
 		
-		res = make_response(redirect("/"))
-		res.set_cookie("slots", str(slots))
+		#res = make_response(redirect("/"))
+		session["slots"] = slots
 		
-		
-		return res
+		return make_response(redirect("/"))
 
 
 @app.route("/", methods = ["GET", "POST"])
@@ -81,8 +122,7 @@ def home():
 		session["gold"] = 100000000
 		gold = session["gold"]
 	
-	#print(gold)
-	
+	gold = '{:,}'.format(gold)
 	
 	#s = requests.session()
 	#s.cookies["foo"] = "bar"
@@ -90,9 +130,9 @@ def home():
 	#s.post('http://localhost/', params={'foo': 'bar'})
 	#print(s.cookies)
 	
-	if ("slots" in request.cookies):
-		slots = request.cookies.get("slots")
-		slots = ast.literal_eval(slots)
+	if ("slots" in session):
+		slots = session["slots"]
+		#slots = ast.literal_eval(slots)
 		
 		threads = []
 		
@@ -105,7 +145,7 @@ def home():
 		for thread in threads:
 			thread.join()
 			
-		print(slots)
+		#print(slots)
 		
 		
 	else:
@@ -114,7 +154,7 @@ def home():
 	
 	if (request.method == "GET"):
 	
-		return render_template("index.html", slots = slots)
+		return render_template("index.html", slots = slots, gold = gold)
 			
 	else:
 		
@@ -152,9 +192,9 @@ def home():
 		for thread in threads:
 			thread.join()
 		
-		print(results)
+		#print(results)
 		
-		return render_template("index.html", items = results, slots = slots)
+		return render_template("index.html", items = results, slots = slots, gold = gold)
 		
 	
 	
