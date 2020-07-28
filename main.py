@@ -19,19 +19,22 @@ secret_key = secrets.token_urlsafe(16)
 app = Flask(__name__)
 app.secret_key = "7BOXEyui_8wRiMOU0Pq6LQ"
 
-slots = []
-
 
 @app.route("/sell", methods = ["GET", "POST"])
 def sell():
 
 	if (request.method == "POST"):
 	
+		pos = request.form.get("pos")
 		itemId = request.form.get("id")
 		stock = int(request.form.get("stock"))
 		quantity = int(request.form.get("quantity"))
 		unitPrice = request.form.get("unitPrice")
 	
+		if (quantity <= 0):
+			#you cannot buy that amount
+			return make_response(redirect("/"))
+		
 		
 		cleanPrice = int(standardizePrice(unitPrice))
 		totalPrice = cleanPrice * quantity
@@ -39,15 +42,29 @@ def sell():
 		session["gold"] += totalPrice
 
 		slots = session["slots"]
+		
+		newQuantity = slots[pos]["quantity"]
+		
+		newQuantity -= quantity
+		slots[pos]["quantity"] = newQuantity
+		
+		newSlots = {}
+		
+		if (newQuantity <= 0):
+			
+			slots.pop(pos)
+			for slot in slots:
+				if (slot > pos):
+					newSlots[str(int(slot) - 1)] = slots[slot]
+				else:
+					newSlots[slot] = slots[slot]
+		
+		
+			slots = newSlots
+			
 
-		for slot in slots:
-			if (slot[0] == itemId):
-				slot[2] -= quantity
-				if (slot[2] == 0):
-					slots.pop(0)
-				break
-				
 		session["slots"] = slots
+		print(session["slots"])
 		
 		return make_response(redirect("/"))
 
@@ -80,34 +97,31 @@ def buy():
 		
 		print(itemId, name, quantity, unitPrice, totalPrice)
 		
-		slot = []
+		slot = {}
 		
-		slot.append(itemId)
-		slot.append(name)
-		slot.append(quantity)
-		slot.append(unitPrice)
-		slot.append(totalPrice)
-		#slot.append(actualPrice)
+		slot["id"] = itemId
+		slot["name"] = name
+		slot["quantity"] = quantity
+		#slot["quantity"] = '{:,}'.format(quantity)
+		slot["unitPrice"] = unitPrice
+		slot["totalPrice"] = totalPrice
+		#slot["currentPrice"] = totalPrice
 		
-		#Slot 1:
-		#[Item ID, Name, Quantity, unitPrice, totalPrice]
-		#[50, Shortbow (u), 100, 11, 1100]
 		
-		slots = []
+		slots = {}
+		
 		if ("slots" in session):
 		
 			slots = session["slots"]
 			#slots = ast.literal_eval(slots)
+		else:
+			session["slots"] = {}
 			
-		slots.append(slot)
+		length = len(slots) + 1
 		
-		#Slots:
-		#[[Slot 1], [Slot 2], [Slot 3], [Slot 4], [Slot 5], [Slot 6], [Slot 7], [Slot 8]]
-		#[[50, Shortbow (u), 100, 11, 1100], [20997, Twisted bow, 2, 1.2b, 2.4b]]
+		session["slots"][str(length)] = slot
 		
-		
-		#res = make_response(redirect("/"))
-		session["slots"] = slots
+		print(session["slots"])
 		
 		return make_response(redirect("/"))
 
@@ -124,32 +138,26 @@ def home():
 	
 	gold = '{:,}'.format(gold)
 	
-	#s = requests.session()
-	#s.cookies["foo"] = "bar"
-	#print(s.cookies["foo"])
-	#s.post('http://localhost/', params={'foo': 'bar'})
-	#print(s.cookies)
-	
 	if ("slots" in session):
+		
 		slots = session["slots"]
 		#slots = ast.literal_eval(slots)
 		
 		threads = []
 		
-		for i in range (0, len(slots)):
-			
-			t = threading.Thread(target = updatePrices, args = (slots[i],))
+		for slot in slots:
+		#for i in range (0, len(slots)):
+		
+			t = threading.Thread(target = updatePrices, args = (slots, slot))
+			#t = threading.Thread(target = updatePrices, args = (i + 1, slots))
 			t.start()
 			threads.append(t)
-		
+	
 		for thread in threads:
 			thread.join()
-			
-		#print(slots)
-		
 		
 	else:
-		slots = []
+		slots = {}
 	
 	
 	if (request.method == "GET"):
@@ -199,16 +207,17 @@ def home():
 	
 	
 	
-def updatePrices(slot):
+def updatePrices(slots, pos):
 	
-	url = "https://secure.runescape.com/m=itemdb_oldschool/api/catalogue/detail.json?item=" + slot[0]
+	url = "https://secure.runescape.com/m=itemdb_oldschool/api/catalogue/detail.json?item=" + slots[pos]["id"]
 	
 	response = requests.get(url).json()
 	
 	item = {}
 	item = response["item"]
 	
-	slot.append(item["current"]["price"])
+	#slot["currentPrice"] = item["current"]["price"]
+	slots[pos]["currentPrice"] = item["current"]["price"]
 	
 	
 def standardizePrice(price):

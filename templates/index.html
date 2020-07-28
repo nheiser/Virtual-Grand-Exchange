@@ -17,13 +17,13 @@ Gold: {{ gold }}
 
 {% for slot in slots %}
 
-Name: {{ slot[1] }}
+Name: {{ slots[slot]["name"] }}
 <br>
-Quantity: {{ slot[2] }}
+Quantity: {{ slots[slot]["quantity"] }}
 <br>
-Bought at: {{ slot[3] }}
+Bought at: {{ slots[slot]["unitPrice"] }}
 <br>
-Amount Spent: {{ slot[4] }}
+Amount Spent: {{ slots[slot]["totalPrice"] }}
 
 <br>
 <br>
@@ -78,15 +78,16 @@ Amount Spent: {{ slot[4] }}
 		
 		<div ng-controller="Ctrl" ng-init="quantity=0">
 		
-			<form id={{ slot[0] }} action="/sell" method="post">
+			<form id="{{ slot }}" action="/sell" method="post">
 			
-				<input type="hidden" name="id" ng-model="id" value="{{ slot[0] }}">
-				<input type="hidden" name="stock" ng-model="stock" value="{{ slot[2] }}">
-				<input type="hidden" name="unitPrice" ng-model="unitPrice" value="{{ slot[5] }}">
-				{{ slot[1] }}
-				Supply: {{ slot[2] }}
-				Current Value: {{ slot[5] }}
-				Sell: <input type="number" name="quantity" value="0" min="0" max="{{ slot[2] }}" ng-change="updateTotal('{{ slot[5] }}')" ng-model="quantity">
+				<input type="hidden" name="pos" ng-model="pos" value="{{ slot }}">
+				<input type="hidden" name="id" ng-model="id" value="{{ slots[slot]['id'] }}">
+				<input type="hidden" name="stock" ng-model="stock" value="{{ slots[slot]['quantity'] }}">
+				<input type="hidden" name="unitPrice" ng-model="unitPrice" value="{{ slots[slot]['currentPrice'] }}">
+				{{ slots[slot]["name"] }}
+				Supply: {{ slots[slot]["quantity"] }}
+				Current Value: {{ slots[slot]["currentPrice"] }}
+				Sell: <input type="number" name="quantity" value="0" min="0" max="{{ slots[slot]['quantity'] }}" ng-change="updateTotal('{{ slots[slot]['currentPrice'] }}')" ng-model="quantity">
 				<span ng-bind="total"></span>
 				<input type="submit" value="Sell">
 					
