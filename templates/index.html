@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -5,34 +6,93 @@
 <script src="https://unpkg.com/vue"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
-
-</head>
+<link rel="stylesheet" href="../static/css/main.css">
 
 <title>Virtual Grand Exchange</title>
 
-Gold: {{ gold }}
-<br>
-<br>
+</head>
 
 
-{% for slot in slots %}
+<body>
 
-Name: {{ slots[slot]["name"] }}
-<br>
-Quantity: {{ slots[slot]["quantity"] }}
-<br>
-Bought at: {{ slots[slot]["unitPrice"] }}
-<br>
-Amount Spent: {{ slots[slot]["totalPrice"] }}
 
-<br>
-<br>
+
+
+
+
+<div class="container">
+
+
+<div id="header">
+
+
+<div id="coins">
+<!--
+<img src="https://oldschool.runescape.wiki/images/6/63/Coins_detail.png" alt="coins" width="100" height="100"></img>
+-->
+
+
+
+<!--
+<div>GP: {{ gold }}</div>
+-->
+
+</div>
+
+<div id="title">
+
+<h1>Virtual Grand Exchange</h1>
+
+<img id="gold" src="https://oldschool.runescape.wiki/images/6/63/Coins_detail.png" alt="coins" width="50" height="50"></img>
+
+<h2 style="float: center">GP: {{ gold }}</h2>
+
+</div>
+
+</div>
+
+
+
+<div id="left_col">
+
+
+<table id="slots" width="290">
+<!--
+<tr>
+	<th><img src="https://oldschool.runescape.wiki/images/6/63/Coins_detail.png" alt="coins" width="50" height="50"></img></th>
+	<th>gp</th>
+</tr>
+-->
+
+{% for slot in ['1', '2', '3', '4', '5', '6', '7', '8'] %}
+
+{% if slots[slot] %}
+
+<tr height="60">
+	<td>{{ slots[slot]["name"] }}<br>x {{ slots[slot]["quantity"] }}</td>
+	<td><img src="{{ slots[slot]['icon'] }}" alt="img"></img></td>
+	<td>{{ slots[slot]["totalPrice"] }} coins<br>= {{ slots[slot]["unitPrice"] }} each</td>
+</tr>
+
+{% else %}
+
+<tr>
+	<td colspan="3" rowspan="1" height="50">Empty Slot</td>
+</tr>
+
+{% endif %}
+
 {% endfor %}
 
+</table>
+
+</div>
+
+<div id="middle_col">
 
 <div ng-app="myApp">
 
-<form ng-init="type='buy'">
+<form id="buy-sell" ng-init="type='buy'">
   <input type="radio" ng-model="type" value="buy" checked="checked">Buy
   <input type="radio" ng-model="type" value="sell">Sell
 </form>
@@ -40,9 +100,9 @@ Amount Spent: {{ slots[slot]["totalPrice"] }}
 <div ng-switch="type">
   <div ng-switch-when="buy">
 
-		<form action="/" method="post">
-			Search:<input type="text" name="name" value="">
-			<input type="submit" value="Submit">
+		<form action="/" id="search-bar" method="post">
+			<input type="text" name="name" placeholder="Search..">
+			<input type="submit" id="search-submit" value="Submit">
 		</form>
 
 		<div>
@@ -51,14 +111,24 @@ Amount Spent: {{ slots[slot]["totalPrice"] }}
 		
 			<div ng-controller="Ctrl" ng-init="quantity=0">
 		
-				<form id={{ item[0] }} action="/buy" method="post">
+				<form id="buy-results" action="/buy" method="post">
 			
 					<input type="hidden" name="id" ng-model="id" value="{{ item[0] }}">
 					<input type="hidden" name="name" ng-model="name" value="{{ item[1] }}">
 					<input type="hidden" name="unitPrice" ng-model="unitPrice" value="{{ item[2] }}">
-					{{ item[1] }}
-					{{ item[2] }}
-					Buy: <input type="number" name="quantity" value="0" min="0" ng-change="updateTotal('{{ item[2] }}')" ng-model="quantity">
+					<input type="hidden" name="icon" ng-model="icon" value="{{ item[3] }}">
+					
+					<table id="display-table" width="300">
+					
+					<tr>
+						<td><img src="{{ item[3] }}" alt="img"></img></td>
+						<td>{{ item[1] }}<br>{{ item[2] }} each</td>
+						<td></td>
+					</tr>
+					
+					</table>
+					
+					Qty: <input type="number" name="quantity" value="0" min="0" ng-change="updateTotal('{{ item[2] }}')" ng-model="quantity">
 					<span ng-bind="total"></span>
 					<input type="submit" value="Buy">
 					
@@ -66,6 +136,7 @@ Amount Spent: {{ slots[slot]["totalPrice"] }}
 		
 			</div>
 		
+		<br>
 		<br>
 		{% endfor %}
 		</div>
@@ -78,15 +149,36 @@ Amount Spent: {{ slots[slot]["totalPrice"] }}
 		
 		<div ng-controller="Ctrl" ng-init="quantity=0">
 		
-			<form id="{{ slot }}" action="/sell" method="post">
+			<form id="sell-results" action="/sell" method="post">
 			
 				<input type="hidden" name="pos" ng-model="pos" value="{{ slot }}">
 				<input type="hidden" name="id" ng-model="id" value="{{ slots[slot]['id'] }}">
 				<input type="hidden" name="stock" ng-model="stock" value="{{ slots[slot]['quantity'] }}">
 				<input type="hidden" name="unitPrice" ng-model="unitPrice" value="{{ slots[slot]['currentPrice'] }}">
+				
+				<table id="display-table" width="300">
+				
+				<tr>
+					<td><img src="{{ slots[slot]['icon'] }}" alt="img"></img></td>
+					<td>{{ slots[slot]['name'] }}<br>{{ slots[slot]['currentPrice'] }} each</td>
+					<td style="text-align: right">x {{ slots[slot]["quantity"] }}</td>
+					<td></td>
+					<td></td>
+					
+				</tr>
+				
+				</table>
+				
+				
+				<!--
+				Stock: {{ slots[slot]["quantity"] }}
+				
+				<img src="{{ slots[slot]['icon'] }}" alt="img"></img>
 				{{ slots[slot]["name"] }}
 				Supply: {{ slots[slot]["quantity"] }}
 				Current Value: {{ slots[slot]["currentPrice"] }}
+				-->
+				
 				Sell: <input type="number" name="quantity" value="0" min="0" max="{{ slots[slot]['quantity'] }}" ng-change="updateTotal('{{ slots[slot]['currentPrice'] }}')" ng-model="quantity">
 				<span ng-bind="total"></span>
 				<input type="submit" value="Sell">
@@ -95,6 +187,7 @@ Amount Spent: {{ slots[slot]["totalPrice"] }}
 		</div>
 		
 		<br>
+		<br>
 		{% endfor %}
      
 	</div>
@@ -102,22 +195,30 @@ Amount Spent: {{ slots[slot]["totalPrice"] }}
 
 </div>
 
+</div>
+</div>
 
 <script>
 var app = angular.module('myApp', []);
 app.controller('Ctrl', function($scope) {
 				
-$scope.total = "Price: " + 0;
+$scope.total = "Total: " + 0;
 
-$scope.updateTotal = function(price) {
+$scope.updateTotal = function(price) {	
 	
 	price = standardizePrice(price);
 	
 	product = parseInt(price) * $scope.quantity;
 	
+	if (isNaN(product)) {
+		product = 0;
+	}
+	
 	product = getReadableText(product);
 	
-	$scope.total = "Price: " + product;
+	
+	
+	$scope.total = "Total: " + product;
 					
 	};
 });
@@ -177,7 +278,6 @@ function getReadableText(price){
 
 
 
-
 <!--
 
 {% for item in items %}
@@ -232,5 +332,5 @@ var buyItems = new Vue({
 
 </script>
 
-
+</body>
 </html>

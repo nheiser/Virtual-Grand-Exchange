@@ -1,0 +1,167 @@
+<style>
+
+
+
+
+#myFakeElement { color:red ; }
+
+html, body {
+	background-color: #282828;
+	color: white;
+	#height: 90%;
+}
+
+.container {
+	width: 1170px;
+	padding-right: 15px;
+	padding-left: 15px;
+	margin-right: auto;
+	margin-left: auto;
+	#height: 100%;
+	clear: both;
+	
+}
+
+
+#header {
+	#border: 1px solid #ffffff;
+}
+
+#coins {
+	#padding-right: 85px;
+	#padding-left: 85px;
+	#margin-right: 85px;
+	#margin-left: 85px;
+	margin: 25px;
+	margin-left: 110px;
+	float: left;
+	color: yellow;
+	font-size: 20px;
+	#border: 1px solid #dddddd;
+}
+#gold{
+	#float: left;
+	#display: block;
+	#margin: auto;
+	#text-align: center;
+}
+
+#title {
+	float: right;
+	text-align: center;
+	padding: 15px;
+	width: 75%;
+	#border: 1px solid #dddddd;
+	
+}
+
+#left_col {
+	background-color: #191f27;
+	border: none;
+	float: left;
+	width: 25%;
+	margin-right: 15px;
+	margin-left: 15px;
+	#margin: 15px;
+	position: relative;
+	padding: 15px;
+	clear: both;
+}
+
+
+#middle_col {
+	background-color: #191f27;
+	border: none;
+	float: left;
+	width: 65%;
+	#height: 100%;
+	margin-right: 15px;
+	margin-left: 15px;
+	position: relative;
+	padding-bottom: 25px;
+}
+
+
+#buy-sell {
+	text-align: center;
+	margin: 15px;
+}
+
+#search-bar {
+	text-align: center;
+	margin: 15px;
+	
+}
+#search-submit {
+	padding: 6px;
+	margin: 8px;
+	font-size: 17px;
+	#border: none;
+}
+
+input[type=text] {
+	padding: 6px;
+	margin-top: 8px;
+	font-size: 17px;
+	border: none;
+}
+
+
+input[type=number] {
+	width: 100px;
+}
+
+#buy-results {
+	#margin: 15px;
+	padding-left: 15px;
+	padding-right: 15px;
+	###text-align: center;
+	margin: auto;
+}
+
+#sell-results {
+	#margin: 15px;
+	padding-left: 15px;
+	padding-right: 15px;
+	####text-align: center;
+	margin: auto;
+}
+
+table {
+	font-family: arial, sans-serif;
+	border-collapse: collapse;
+	background-color: #463e34;
+	margin: auto;
+	float: left;
+}
+
+#display-table {
+	background-color: #191f27;
+	#margin: auto;
+	#text-align: center;
+	#position: relative;
+	
+}
+
+td, th {
+	#border: 1px solid #dddddd;
+	text-align: center;
+	padding: 2px;
+}
+
+th {
+	text-align: center;
+}
+
+tr:nth-child(even) {
+	#background-color: #4c433a;
+	#background-color: #000000;
+	background-color: #4f433b;
+	
+}
+
+tr #slots:nth-child(4n+1), tr #slots:nth-child(4n+2) {
+	#background: #000000;
+}
+
+</style>

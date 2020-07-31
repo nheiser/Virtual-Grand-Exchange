@@ -11,6 +11,7 @@ from http import cookies
 from flask import jsonify
 import ast
 import secrets
+import datetime
 from flask import session
 
 
@@ -78,6 +79,7 @@ def buy():
 		name = request.form.get("name")
 		quantity = int(request.form.get("quantity"))
 		unitPrice = request.form.get("unitPrice")
+		icon = request.form.get("icon")
 		
 		if (quantity <= 0):
 			#you cannot buy that amount
@@ -90,24 +92,6 @@ def buy():
 			#you do not have enough gold
 			return make_response(redirect("/"))
 		
-		
-		session["gold"] -= totalPrice
-		
-		totalPrice = '{:,}'.format(totalPrice)
-		
-		print(itemId, name, quantity, unitPrice, totalPrice)
-		
-		slot = {}
-		
-		slot["id"] = itemId
-		slot["name"] = name
-		slot["quantity"] = quantity
-		#slot["quantity"] = '{:,}'.format(quantity)
-		slot["unitPrice"] = unitPrice
-		slot["totalPrice"] = totalPrice
-		#slot["currentPrice"] = totalPrice
-		
-		
 		slots = {}
 		
 		if ("slots" in session):
@@ -118,6 +102,29 @@ def buy():
 			session["slots"] = {}
 			
 		length = len(slots) + 1
+		
+		if (length > 8):
+			#please sell an item before you buy any more
+			return make_response(redirect("/"))
+		
+		session["gold"] -= totalPrice
+		
+		
+		totalPrice = '{:,}'.format(totalPrice)
+		
+		#print(itemId, name, quantity, unitPrice, totalPrice)
+		
+		slot = {}
+		
+		slot["id"] = itemId
+		slot["name"] = name
+		slot["quantity"] = quantity
+		#slot["quantity"] = '{:,}'.format(quantity)
+		slot["unitPrice"] = unitPrice
+		slot["totalPrice"] = totalPrice
+		slot["icon"] = icon
+		slot["currentPrice"] = unitPrice
+		
 		
 		session["slots"][str(length)] = slot
 		
@@ -139,22 +146,25 @@ def home():
 	gold = '{:,}'.format(gold)
 	
 	if ("slots" in session):
-		
+		print("Yay")
 		slots = session["slots"]
 		#slots = ast.literal_eval(slots)
 		
-		threads = []
 		
-		for slot in slots:
-		#for i in range (0, len(slots)):
+		if ("updated" not in session or needUpdate(session["updated"])):
 		
-			t = threading.Thread(target = updatePrices, args = (slots, slot))
-			#t = threading.Thread(target = updatePrices, args = (i + 1, slots))
-			t.start()
-			threads.append(t)
-	
-		for thread in threads:
-			thread.join()
+			threads = []
+			
+			for slot in slots:
+			
+				t = threading.Thread(target = updatePrices, args = (slots, slot))
+				t.start()
+				threads.append(t)
+		
+			for thread in threads:
+				thread.join()
+			
+			session["updated"] = datetime.datetime.now()
 		
 	else:
 		slots = {}
@@ -181,8 +191,8 @@ def home():
 		
 		for id in items:
 		
-			if (items[id]["name"].lower().find(text) > -1):
-			
+			#if (items[id]["name"].lower().find(text) > -1):
+			if (text in items[id]["name"].lower()):
 				count = count + 1
 				entry.append(id)
 				
@@ -202,8 +212,25 @@ def home():
 		
 		#print(results)
 		
+		results.sort()
+		
 		return render_template("index.html", items = results, slots = slots, gold = gold)
 		
+		
+		
+def needUpdate(date):
+
+	newDate = datetime.datetime.now()
+	
+	time_diff = newDate - date
+
+	seconds = time_diff.total_seconds()
+	minutes = seconds / 60
+	
+	if (minutes >= 30):
+		return True
+		
+	return False
 	
 	
 	
@@ -252,6 +279,7 @@ def getPrices(results, id):
 	data.append(id)
 	data.append(item["name"])
 	data.append(item["current"]["price"])
+	data.append(item["icon"])
 	
 	results.append(data)
 
