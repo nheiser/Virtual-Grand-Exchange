@@ -7,12 +7,11 @@ from flask import redirect
 import requests
 import json
 import threading
-from http import cookies
 from flask import jsonify
-import ast
 import secrets
 import datetime
 from flask import session
+import uuid
 
 
 secret_key = secrets.token_urlsafe(16)
@@ -26,8 +25,9 @@ def sell():
 
 	if (request.method == "POST"):
 	
+		id = request.form.get("id")
 		pos = request.form.get("pos")
-		itemId = request.form.get("id")
+		itemId = request.form.get("itemId")
 		stock = int(request.form.get("stock"))
 		quantity = int(request.form.get("quantity"))
 		unitPrice = request.form.get("unitPrice")
@@ -37,13 +37,22 @@ def sell():
 			return make_response(redirect("/"))
 		
 		
+		if (unitPrice <= 0):
+			#database is down, you cannot buy this item now
+			return make_response(redirect("/"))
+		
+		
 		cleanPrice = int(standardizePrice(unitPrice))
 		totalPrice = cleanPrice * quantity
 
-		session["gold"] += totalPrice
 
 		slots = session["slots"]
+
+		if ( not slots[pos]["id"] == uuid.UUID(id)):
+			return make_response(redirect("/"))
 		
+		session["gold"] += totalPrice
+
 		newQuantity = slots[pos]["quantity"]
 		
 		newQuantity -= quantity
@@ -97,14 +106,13 @@ def buy():
 		if ("slots" in session):
 		
 			slots = session["slots"]
-			#slots = ast.literal_eval(slots)
 		else:
 			session["slots"] = {}
 			
 		length = len(slots) + 1
 		
 		if (length > 8):
-			#please sell an item before you buy any more
+			#you cannot buy any more items
 			return make_response(redirect("/"))
 		
 		session["gold"] -= totalPrice
@@ -112,11 +120,10 @@ def buy():
 		
 		totalPrice = '{:,}'.format(totalPrice)
 		
-		#print(itemId, name, quantity, unitPrice, totalPrice)
-		
 		slot = {}
 		
-		slot["id"] = itemId
+		slot["id"] = uuid.uuid4()
+		slot["itemId"] = itemId
 		slot["name"] = name
 		slot["quantity"] = quantity
 		#slot["quantity"] = '{:,}'.format(quantity)
@@ -124,7 +131,6 @@ def buy():
 		slot["totalPrice"] = totalPrice
 		slot["icon"] = icon
 		slot["currentPrice"] = unitPrice
-		
 		
 		session["slots"][str(length)] = slot
 		
@@ -146,10 +152,7 @@ def home():
 	gold = '{:,}'.format(gold)
 	
 	if ("slots" in session):
-		print("Yay")
 		slots = session["slots"]
-		#slots = ast.literal_eval(slots)
-		
 		
 		if ("updated" not in session or needUpdate(session["updated"])):
 		
@@ -191,7 +194,6 @@ def home():
 		
 		for id in items:
 		
-			#if (items[id]["name"].lower().find(text) > -1):
 			if (text in items[id]["name"].lower()):
 				count = count + 1
 				entry.append(id)
@@ -217,7 +219,6 @@ def home():
 		return render_template("index.html", items = results, slots = slots, gold = gold)
 		
 		
-		
 def needUpdate(date):
 
 	newDate = datetime.datetime.now()
@@ -233,17 +234,15 @@ def needUpdate(date):
 	return False
 	
 	
-	
 def updatePrices(slots, pos):
 	
-	url = "https://secure.runescape.com/m=itemdb_oldschool/api/catalogue/detail.json?item=" + slots[pos]["id"]
+	url = "https://secure.runescape.com/m=itemdb_oldschool/api/catalogue/detail.json?item=" + slots[pos]["itemId"]
 	
 	response = requests.get(url).json()
 	
 	item = {}
 	item = response["item"]
 	
-	#slot["currentPrice"] = item["current"]["price"]
 	slots[pos]["currentPrice"] = item["current"]["price"]
 	
 	
@@ -276,14 +275,21 @@ def getPrices(results, id):
 	
 	data = []
 	
+	name = item["name"]
+	
 	data.append(id)
-	data.append(item["name"])
+	data.append(name)
 	data.append(item["current"]["price"])
 	data.append(item["icon"])
 	
+	name.replace(" ", "+")
+	
+	url = "https://secure.runescape.com/m=itemdb_oldschool/" + name + "/viewitem?obj=" + id
+	
+	data.append(url)
+	
 	results.append(data)
 
-	
 
 if __name__ == '__main__':
 	app.run(host='0.0.0.0', debug=True)

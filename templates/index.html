@@ -15,54 +15,32 @@
 
 <body>
 
+<div id="header">Check out the Virtual Grand Exchange GitHub</div>
+
+
+<div id="title">
+
+<img style="float: left" src="https://oldschool.runescape.wiki/images/a/a3/RuneScape_2_logo.png?acc73"></img>
 
 
 
+<h1>Virtual Grand Exchange</h1>
+
+<h2>Your Gold: {{ gold }}</h2>
+
+</div>
 
 
 <div class="container">
 
-
-<div id="header">
-
-
-<div id="coins">
-<!--
-<img src="https://oldschool.runescape.wiki/images/6/63/Coins_detail.png" alt="coins" width="100" height="100"></img>
--->
-
-
-
-<!--
-<div>GP: {{ gold }}</div>
--->
-
-</div>
-
-<div id="title">
-
-<h1>Virtual Grand Exchange</h1>
-
-<img id="gold" src="https://oldschool.runescape.wiki/images/6/63/Coins_detail.png" alt="coins" width="50" height="50"></img>
-
-<h2 style="float: center">GP: {{ gold }}</h2>
-
-</div>
-
-</div>
-
+<div id="banner"></div>
 
 
 <div id="left_col">
 
+<h3 style="text-align: center">Slots:</h3> 
 
 <table id="slots" width="290">
-<!--
-<tr>
-	<th><img src="https://oldschool.runescape.wiki/images/6/63/Coins_detail.png" alt="coins" width="50" height="50"></img></th>
-	<th>gp</th>
-</tr>
--->
 
 {% for slot in ['1', '2', '3', '4', '5', '6', '7', '8'] %}
 
@@ -118,19 +96,19 @@
 					<input type="hidden" name="unitPrice" ng-model="unitPrice" value="{{ item[2] }}">
 					<input type="hidden" name="icon" ng-model="icon" value="{{ item[3] }}">
 					
-					<table id="display-table" width="300">
+					<table id="display-table" width="400">
 					
 					<tr>
 						<td><img src="{{ item[3] }}" alt="img"></img></td>
-						<td>{{ item[1] }}<br>{{ item[2] }} each</td>
+						<td><a href="{{ item[4] }}" target = "_blank" style="color: white">{{ item[1] }}</a><br>{{ item[2] }} each</td>
 						<td></td>
 					</tr>
 					
 					</table>
 					
-					Qty: <input type="number" name="quantity" value="0" min="0" ng-change="updateTotal('{{ item[2] }}')" ng-model="quantity">
+					<div style="float:left">Qty: <input type="number" name="quantity" value="0" min="0" ng-change="updateTotal('{{ item[2] }}')" ng-model="quantity"></div>
 					<span ng-bind="total"></span>
-					<input type="submit" value="Buy">
+					<input type="submit" style="float: right" value="Buy">
 					
 				</form>
 		
@@ -152,11 +130,12 @@
 			<form id="sell-results" action="/sell" method="post">
 			
 				<input type="hidden" name="pos" ng-model="pos" value="{{ slot }}">
+				<input type="hidden" name="itemId" ng-model="itemId" value="{{ slots[slot]['itemId'] }}">
 				<input type="hidden" name="id" ng-model="id" value="{{ slots[slot]['id'] }}">
 				<input type="hidden" name="stock" ng-model="stock" value="{{ slots[slot]['quantity'] }}">
 				<input type="hidden" name="unitPrice" ng-model="unitPrice" value="{{ slots[slot]['currentPrice'] }}">
 				
-				<table id="display-table" width="300">
+				<table id="display-table" width="400">
 				
 				<tr>
 					<td><img src="{{ slots[slot]['icon'] }}" alt="img"></img></td>
@@ -169,20 +148,10 @@
 				
 				</table>
 				
-				
-				<!--
-				Stock: {{ slots[slot]["quantity"] }}
-				
-				<img src="{{ slots[slot]['icon'] }}" alt="img"></img>
-				{{ slots[slot]["name"] }}
-				Supply: {{ slots[slot]["quantity"] }}
-				Current Value: {{ slots[slot]["currentPrice"] }}
-				-->
-				
-				Sell: <input type="number" name="quantity" value="0" min="0" max="{{ slots[slot]['quantity'] }}" ng-change="updateTotal('{{ slots[slot]['currentPrice'] }}')" ng-model="quantity">
+				<div style="float: left">Sell: <input type="number" style="" name="quantity" value="0" min="0" max="{{ slots[slot]['quantity'] }}" ng-change="updateTotal('{{ slots[slot]['currentPrice'] }}')" ng-model="quantity"></div>
 				<span ng-bind="total"></span>
-				<input type="submit" value="Sell">
-					
+				<input type="submit" style="float: right" value="Sell">
+				
 			</form>
 		</div>
 		
